@@ -1,0 +1,205 @@
+\documentclass[a4paper]{article}
+\usepackage[acronym]{glossaries}
+\usepackage{hyperref} 
+\usepackage{array}
+\usepackage{algorithm,algpseudocode,float}
+\usepackage{chngcntr}
+\usepackage{listings}
+
+\counterwithin{table}{section}
+\counterwithout{algorithm}{section}
+
+\newacronym{dsa}{DSA}{Dynamic Staking Algorithm}
+\newacronym{token}{tokens}{Smart Audit Token}
+\newacronym{wbr}{\ensuremath{\mathit{WBR}}}{weighted block reward}
+\makeglossaries 
+
+\algdef{SE}[VARIABLES]{Variables}{EndVariables}
+   {\algorithmicvariables}
+   {\algorithmicend\ \algorithmicvariables}
+\algnewcommand{\algorithmicvariables}{\textbf{global variables}}
+
+\begin{document}
+%\pagestyle{headings}
+\setlength{\parindent}{2ex}
+\setlength{\parskip}{0.5em}
+\section{\acrfull{dsa}}
+\noindent
+Multiple custodial and non-custodial staking solutions exist with their advantages and inconvenients, every methods can be susceptible to hacks or exploits; however, custodial solution represents a higher risk, rather than users being in control of their assets a small group or a single entity is in charge exposing all assets to higher attack surface.\par
+\noindent
+The main invonvenience of non-custodial solution such as autonomous smart-contract is the trade-off between gas consumption and the reward algorithm. Knowing that EVM is a state machine, implemting such algorithms will require saving every action done by a user (without using any array to optimize gas consumption) while taking into account other users actions to solve one of the major inconvenience of smart contract staking algorithms.\par
+\noindent
+Please note that from here on we assume that the staking purpose is to generate reward for the users, other's can exist but for the sake of simplicity we will use the most common ones (reward or dividend).\par
+\noindent
+The biggest chalenge to over come is that users actions are dependent to one another meaning that if a user \textit{A} stake, add to his stake or widthraw, the reward of user \textit{B} will be affected. The main goal is to achieve a linear reward computaion for each user as demonstrated in equation \ref{eq:reward_goal}.\par
+\begin{flushleft}
+We define $R_{K,N}^{j}$ as the reward of user \textit{j} between block \textit{K} and \textit{N}.
+\end{flushleft}
+\begin{equation} \label{eq:reward_goal}
+R_{K,N}^{j}= R_{K,M}^{j}+R_{M,N}^{j}
+\end{equation}
+\begin{flushleft}
+where $K < M < N$.
+\end{flushleft}
+\section{Mathematical Proof}
+\subsection{Example Use Case}
+\noindent
+The goal of this use case implementation of \acrshort{dsa} is to achieve a reward distribution scheme similar to pool mining reward, refer to Table \ref{tab:table_reward_example} for more details, it can be used an optimized desing for future PoS ethereum pools (please note that many other use cases can be derived from this implementation).\par
+\begin{table}[h!]
+  \begin{center}
+    \caption{Reward distribution example.}
+    \label{tab:table_reward_example}
+    \begin{tabular}{ c | c c c c c c || c }
+      \hline \
+  	  \textit{i} & 0 & 1 &  2 & 3 & 4 & 5 & $\mathit{R_{0,4}^j}$ \\
+  	  \hline
+      $R_{i,i}^0$ & 0 & 120 & 40 & 20 & 0 & 0 & 180 \\ 
+      $R_{i,i}^1$ & 0 & 0 & 80 & 40 & 48 & 60 & 228 \\ 
+      $R_{i,i}^2$ & 0 & 0 & 0 & 60 & 72 & 60 & 192 \\
+      \hline
+      \multicolumn{8}{l}{\footnotesize \textit{i} is the block number}\\
+      \multicolumn{8}{l}{\footnotesize $R_{i,i}^j$ is the reward of user \textit{j} at block \textit{i}}\\
+      \multicolumn{8}{l}{\footnotesize $R_{0,4}^j$ is the reward sum between block $i=0$ and $i=4$ of user \textit{j} }\\
+    \end{tabular}
+  \end{center}
+\end{table}
+\noindent
+We suppose that at each block a reward is distributed, where $\mathit{BR}_i$ for $i=0,...,5$ is equal to $120$ \acrshort{token} with a chronological order of events as follow:
+\begin{itemize}
+  \setlength\itemsep{0.1em}
+  \item $user_0$ stake 100 \acrshort{token} at block $1$
+  \item $user_1$ stake 200 \acrshort{token} at block $2$
+  \item $user_2$ stake 300 \acrshort{token} at block $3$
+  \item $user_0$ widthraw 100 \acrshort{token} at block $4$
+  \item $user_1$ stake 100 \acrshort{token} at block $5$
+\end{itemize}
+\noindent
+Obtaining the results presented in Table \ref{tab:table_reward_example} in a custodial or centralized solution is easy since there is no gas fee or gas block limit, however, when implementing the same algorithm in a smart contract the task is a way harder since it is nearly impossible to compute and save the reward for each user at every block due to high gas consumption when dealing with arrays (if a single user stake at a given block, the reward for all users will change).\par
+\noindent
+The following subsection shows how to solve this problem by removing the usage of arrays of user interacations when computing the reward.\par
+\subsection{Demonstration}
+\begin{flushleft}
+We define $R_{K,N}^{j}$ as the reward of user \textit{j} between block \textit{K} and \textit{N}.
+\end{flushleft}
+\begin{equation} \label{eq:reward_formula}
+R_{K,N}^{j}= \sum_{i=K}^{i=N} A_i^j * \frac{\mathit{BR}_i}{S_i} 
+\end{equation}
+\begin{flushleft}
+where:\
+\end{flushleft}
+\begin{itemize}
+  \item $ \mathit{BR}_i $ is the staking reward at block \textit{i} to be devided between the stakers
+  \item $ S_i$ is the total staked amount at block \textit{i} for the total number of user \textit{P} 
+  	\begin{equation} \label{eq:total_stake}
+	    S_i= \sum_{j=0}^{j=P}A_i^j
+	  \end{equation}
+  \item $A_i^j$ is the amount staked by a user \textit{j} at block \textit{i}
+\end{itemize}
+\begin{flushleft}
+If we suppose that no staking or withdrawing activity was done between block \textit{K} and \textit{M}, $A_i^j$ and $S_i$ will remain constant on every block \textit{i} where $i=K,K+1,...,M-1,M$.
+\end{flushleft}
+\begin{flushleft}
+The new formulation of equation \ref{eq:reward_formula} will be as follow:
+\end{flushleft}
+\begin{equation} \label{eq:reward_formula_fixed}
+R_{K,L}^{j}= \frac{A^j}{S} * \sum_{i=K}^{i=L} \mathit{BR}_i
+\end{equation}
+\begin{flushleft}
+if we assume that any user \textit{x} started staking at block \textit{M}, the reward of user \textit{j} where $j\neq x$ will be:
+\end{flushleft}
+\begin{equation} \label{eq:reward_goal_example}
+R_{K,N}^{j}= R_{K,M}^{j} + R_{M,N}^{j}
+\end{equation}
+% \begin{equation} \label{eq:reward_goal_example}
+% R_{K,N}^{j}= \frac{A^j}{S_{K,M}} * \sum_{i=K}^{i=M} \mathit{BR}_i + \frac{A^j}{S_{M,N}} * \sum_{i=M}^{i=L} \mathit{BR}_i
+% \end{equation}
+\begin{equation} \label{eq:reward_goal_example_2}
+R_{K,N}^{j}= A^j*(\frac{1}{S_{K,M}} * \sum_{i=K}^{i=M} \mathit{BR}_i + \frac{1}{S_{M,N}} * \sum_{i=M}^{i=L} \mathit{BR}_i)
+\end{equation}
+\begin{flushleft}
+If we define the \acrfull{wbr} as follow:
+\end{flushleft}
+\begin{equation} \label{eq:weighted_block_reward}
+\acrshort{wbr}_{K,M}= \frac{1}{S_{K,M}}*\sum_{i=K}^{i=L} \mathit{BR}_i
+\end{equation}
+\begin{flushleft}
+Equation \ref{eq:reward_goal_example_2} will become:
+\end{flushleft}
+\begin{equation} \label{eq:reward_goal_example_3}
+R_{K,N}^{j}= A^j*(\acrshort{wbr}_{K,M} + \acrshort{wbr}_{M,N})
+\end{equation}
+\subsection{Algorithm}
+\noindent
+As demonstrated in equation \ref{eq:reward_goal_example_3}, a user \textit{j} reward between two blocks \textit{(M,N)} is the sum of \acrshort{wbr} between the same blocks multiplied by the user stake.\par
+\noindent
+When a user start staking at block \textit{K} we save the total sum $\acrshort{wbr}_{0,K}$ for the specific user, once he claims, stake or withdraw at block N, we substruct the sum of $\acrshort{wbr}_{0,N}$ from the initial sum of $\acrshort{wbr}_{0,K}$. hence getting the reward of user j, $R^j=A^j*\acrshort{wbr}_{K,N}$ (for a detailed definition please refer to algorithm \ref{alg:algo_1}).\par
+\section{Conclusion}
+\noindent
+A beta solidity implementation of this algorithm can be found \href{https://github.com/RideSolo/solidity-staking}{here}, all the conducted tests satisfied the expected results in Table \ref{tab:table_reward_example}, the mathematical demonstration was proved experimentaly.\par
+
+\noindent To execute the tests please follow the steps bellow:
+\begin{lstlisting}
+$ git clone https://github.com/ridesolo/staking-library.git
+$ cd staking-library
+$ npm install
+\end{lstlisting}
+\noindent Once installed, you can start testing the solidity code contained in the contract folder by running:
+\begin{lstlisting}
+$ npm run test-report
+\end{lstlisting}
+
+\begin{algorithm}[H]
+\caption{\acrlong{dsa}}
+\label{alg:algo_1}
+\begin{algorithmic}
+\Variables
+	\State $R^j$, reward of user \textit{j}
+	\State $A^j$, stake of user \textit{j}
+	\State $S$, total staked amount
+	\State $\acrshort{wbr}$, \acrlong{wbr}
+	\State $\acrshort{wbr}^j$, last \acrlong{wbr} for user \textit{j}
+	\State $\mathit{LB}$, last block number where any modification was performed
+	\State $\mathit{BR}$, 120 tokens reward to distribute on each block
+\EndVariables
+\Procedure{stake}{$value$, $\mathit{i}$, $\mathit{j}$}
+  \State $\mathit{BR}_{LB,i}$, sum of the reward between block \textit{LB} and \textit{i}
+  \State $\mathit{BR}_{LB,i} = (i - \mathit{LB}) * BR$
+  \If{$S \neq 0$} 
+    \State $\acrshort{wbr} = \acrshort{wbr} + \frac{\mathit{BR}_{LB,i}}{S}$
+  \EndIf
+  \State $R^j = R^j + A^j * (\acrshort{wbr} - \acrshort{wbr}^j)$
+  \State $\acrshort{wbr}^j = \acrshort{wbr}$
+  \State $A^j = A^j + \mathit{value}$
+  \State $S = S + \mathit{value}$
+  \State $\mathit{LB} = i$
+\EndProcedure
+\Procedure{withdraw}{$value$, $\mathit{i}$, $\mathit{j}$}
+  \State $\mathit{BR}_{LB,i}$, sum of the reward between block \textit{LB} and \textit{i}
+  \State $\mathit{BR}_{LB,i} = (i - \mathit{LB}) * BR$
+  \If{$S \neq 0$} 
+    \State $\acrshort{wbr} = \acrshort{wbr} + \frac{\mathit{BR}_{LB,i}}{S}$
+  \EndIf
+  \State $R^j = R^j + A^j * (\acrshort{wbr} - \acrshort{wbr}^j)$
+  \State $\acrshort{wbr}^j = \acrshort{wbr}$
+  \State $A^j = A^j - \mathit{value}$
+  \State $\mathit{transfer}(j,value)$
+  \State $S = S - \mathit{value}$
+  \State $\mathit{LB} = i$
+\EndProcedure
+\Procedure{claim}{$\mathit{i}$, $\mathit{j}$}
+  \State $\mathit{BR}_{LB,i}$, sum of the reward between block \textit{LB} and \textit{i}
+  \State $\mathit{BR}_{LB,i} = (i - \mathit{LB}) * BR$
+  \If{$S \neq 0$} 
+    \State $\acrshort{wbr} = \acrshort{wbr} + \frac{\mathit{BR}_{LB,i}}{S}$
+  \EndIf
+  \State $R^j = R^j + A^j * (\acrshort{wbr} - \acrshort{wbr}^j)$
+  \State $\acrshort{wbr}^j = \acrshort{wbr}$
+  \State $\mathit{LB} = i$
+	\State $\mathit{transfer}(j,R^j)$
+	\State $R^j = 0$
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
+\clearpage
+% \printglossary[type=\acronymtype]
+\end{document}

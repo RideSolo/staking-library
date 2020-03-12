@@ -1,0 +1,37 @@
+{
+  "name": "staking-library",
+  "version": "1.0.0",
+  "description": "staking library",
+  "main": "index.js",
+  "scripts": {
+    "compile": "truffle compile",
+    "migrate": "truffle migrate --reset",
+    "test": "truffle test",
+    "test-report": "truffle test --report"
+  },
+  "keywords": [
+    "Network",
+    "Blockchain",
+    "Ethereum",
+    "Staking"
+  ],
+  "author": "github.com/ridesolo",
+  "dependencies": {
+    "npm": "^6.13.6"
+  },
+  "devDependencies": {
+    "@openzeppelin/contracts": "^2.5.0",
+    "@openzeppelin/test-helpers": "^0.5.4",
+    "@truffle/hdwallet-provider": "^1.0.31",
+    "chai": "^4.1.2",
+    "chai-as-promised": "^7.1.1",
+    "chai-bn": "^0.2.0",
+    "eth-gas-reporter": "^0.2.12",
+    "ganache-cli": "^6.9.1",
+    "solc": "0.5.8",
+    "truffle": "^5.1.16",
+    "truffle-assertions": "^0.9.1",
+    "truffle-contract": "^3.0.6",
+    "web3": "^1.2.6"
+  }
+}

@@ -49,7 +49,7 @@ contract('Staking', (accounts) => {
     // original block number transaction has to be executed thit is why we check the reward after execution
     // of a second transaction.
 
-    console.log('\nThe following tests represent the expected results of Table 1 in https://pdf.com\n')
+    console.log('\nThe following tests represent the expected results of Table 1 in https://github.com/RideSolo/staking-library/blob/master/doc/dsa.pdf\n')
     await this.staking.stake(web3.utils.toWei('100'), {from:accounts[0]});
     console.log('  - User 0 stake 100 tokens at block 1')
     chai.expect(await this.staking.getStake(accounts[0])).to.be.bignumber.equal(web3.utils.toWei('100'))

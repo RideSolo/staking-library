@@ -43,7 +43,7 @@ contract('Staking', (accounts) => {
     chai.expect(await this.tokenMock.allowance(accounts[2], staking.address, {from: accounts[2]})).to.be.bignumber.equal(web3.utils.toWei('300'))
   })
 
-  it('Staking test, expected result of Table 1  were satisfied', async () => {
+  it('Staking test, expected result of Table 2.1  were satisfied', async () => {
     
     // please note that to get the reward for a user after that he starts staking at least one block from his
     // original block number transaction has to be executed thit is why we check the reward after execution

@@ -42,9 +42,18 @@ R_{K,N}^{j}= R_{K,M}^{j}+R_{M,N}^{j}
 where $K < M < N$.
 \end{flushleft}
 \section{Mathematical Proof}
-\subsection{Example Use Case}
+\subsection{Example Use Cases}
 \noindent
-The goal of this use case implementation of \acrshort{dsa} is to achieve a a reward distribution by block, where the a reward is distributed every block between stakers following their stake value (this is just one use case, more research are needed to implement a broader library ), refer to Table \ref{tab:table_reward_example} for more details, another example is the deployement of future PoS dynamic pool where the reward can be disributed fairly without usage or arrays.\par
+The goal of this use case implementation of \acrshort{dsa} is to achieve a a reward distribution by block, where a reward is distributed every block between stakers following their stake value, it can be seen as an inflationary token with a monetary policy that requires users to stake if they want to get part of the newly minted tokens.\par
+\noindent
+Other use cases can be implemented like:
+\begin{itemize}
+  \setlength\itemsep{0.1em}
+  \item Future PoS pools, where stakers can make multiple deposits, without need to use an array to save their actions to compute the reward later on.
+  \item A lending platform that distibute dividends using the proposed optimized algorithm, etc ...
+\end{itemize}\par
+\noindent
+More research are needed to implement a broader library. Refer to Table \ref{tab:table_reward_example} for more details, another example is the deployement of future PoS dynamic pool where the reward can be disributed fairly without usage or arrays.\par
 \begin{table}[h!]
   \begin{center}
     \caption{Reward distribution example.}
@@ -64,7 +73,7 @@ The goal of this use case implementation of \acrshort{dsa} is to achieve a a rew
   \end{center}
 \end{table}
 \noindent
-We suppose that at each block a reward is distributed, where $\mathit{BR}_i$ for $i=0,...,5$ is equal to $120$ \acrshort{token} with a chronological order of events as follow:
+We suppose that at each block a reward is distributed, where $\mathit{BR}_i$ for $i=0,...,5$ is equal to $120$ (the value of the reward per block can be dynamic following a precise monetary policy, we used a fixed reward for simplification only) \acrshort{token} with a chronological order of events as follow:
 \begin{itemize}
   \setlength\itemsep{0.1em}
   \item $user_0$ stake 100 \acrshort{token} at block $1$
@@ -135,18 +144,18 @@ As demonstrated in equation \ref{eq:reward_goal_example_3}, a user \textit{j} re
 When a user start staking at block \textit{K} we save the total sum $\acrshort{wbr}_{0,K}$ for the specific user, once he claims, stake or withdraw at block N, we substruct the sum of $\acrshort{wbr}_{0,N}$ from the initial sum of $\acrshort{wbr}_{0,K}$. hence getting the reward of user j, $R^j=A^j*\acrshort{wbr}_{K,N}$ (for a detailed definition please refer to algorithm \ref{alg:algo_1}).\par
 \section{Conclusion}
 \noindent
-A beta solidity implementation of this algorithm can be found \href{https://github.com/RideSolo/solidity-staking}{here}, all the conducted tests satisfied the expected results in Table \ref{tab:table_reward_example}, the mathematical demonstration was proved experimentaly.\par
+A beta solidity implementation of this algorithm can be found \href{https://github.com/RideSolo/staking-library}{here}, all the conducted tests satisfied the expected results in Table \ref{tab:table_reward_example}, the mathematical demonstration was proved experimentaly.\par
 
-\noindent To execute the tests please follow the steps bellow:
-\begin{lstlisting}
-$ git clone https://github.com/ridesolo/staking-library.git
-$ cd staking-library
-$ npm install
-\end{lstlisting}
-\noindent Once installed, you can start testing the solidity code contained in the contract folder by running:
-\begin{lstlisting}
-$ npm run test-report
-\end{lstlisting}
+\noindent To execute the tests please follow the steps described in the repository \href{https://github.com/RideSolo/staking-library/blob/master/README.md}{README}.
+% \begin{lstlisting}
+% $ git clone https://github.com/ridesolo/staking-library.git
+% $ cd staking-library
+% $ npm install
+% \end{lstlisting}
+% \noindent Once installed, you can start testing the solidity code contained in the contract folder by running:
+% \begin{lstlisting}
+% $ npm run test-report
+% \end{lstlisting}
 
 \begin{algorithm}[H]
 \caption{\acrlong{dsa}}
